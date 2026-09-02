@@ -6,7 +6,7 @@
     <title>Taulell de Control - Desktop</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,300;0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
     
     <style>
         :root {
@@ -97,6 +97,19 @@
             color: var(--text-muted);
             font-weight: 700;
             z-index: 2;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-title svg {
+            width: 14px;
+            height: 14px;
+            fill: none;
+            stroke: var(--text-muted);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
         }
 
         .clock-container {
@@ -162,7 +175,7 @@
             font-size: 1.5rem;
             font-weight: 700;
             color: var(--text-main);
-            margin-top: 16px;
+            margin-top: 10px;
             display: flex;
             align-items: center;
             gap: 6px;
@@ -170,6 +183,20 @@
 
         .widget-sub {
             font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .currency-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .currency-text-inv {
+            font-size: 1.1rem;
+            font-weight: 400;
+            font-style: italic;
             color: var(--text-muted);
             margin-top: 4px;
         }
@@ -224,32 +251,42 @@
         </div>
     </div>
 
+    <!-- Fila del mig actualitzada -->
     <div class="grid-row">
         <div class="card">
-            <span class="card-title">Temp</span>
+            <span class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M14 14.76V5a2 2 0 0 0-4 0v9.76a4.5 4.5 0 1 0 4 0z"/></svg>
+                Temperatura
+            </span>
             <div class="widget-metric" id="tempVal">-- °C</div>
-            <div class="widget-sub">Temperatura</div>
         </div>
         <div class="card">
-            <span class="card-title">Hum</span>
+            <span class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                Humitat
+            </span>
             <div class="widget-metric" id="humVal">-- %</div>
-            <div class="widget-sub">Humitat</div>
         </div>
         <div class="card">
-            <span class="card-title">Sens</span>
+            <span class="card-title">
+                <svg viewBox="0 0 24 24"><path d="M12 9a3 3 0 0 0-3 3H3a9 9 0 1 0 18 0h-6a3 3 0 0 0-3-3z"/></svg>
+                Sensació
+            </span>
             <div class="widget-metric" id="sensVal">-- °C</div>
-            <div class="widget-sub">Sensació</div>
         </div>
         <div class="card">
-            <span class="card-title">Pres</span>
+            <span class="card-title">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 12l3-3"/><path d="M12 7v1"/></svg>
+                Pressió
+            </span>
             <div class="widget-metric">
                 <span id="presVal">-- hPa</span>
                 <span id="presTrend" class="arrow-up">↑</span>
             </div>
-            <div class="widget-sub">Pressió</div>
         </div>
     </div>
 
+    <!-- Fila inferior actualitzada -->
     <div class="grid-row">
         <div class="card">
             <span class="card-title">Gasolina 95</span>
@@ -259,22 +296,24 @@
         
         <div class="card">
             <span class="card-title">Pròxim FCB</span>
-            <div class="widget-metric" style="font-size: 1.05rem; text-align: center;" id="fcbMatch">
+            <div class="widget-metric" style="font-size: 1.25rem; font-weight: 700; text-align: center;" id="fcbRival">
+                vs. Valencia CF
+            </div>
+            <div class="widget-sub" style="font-size: 0.85rem; font-weight: 400; color: var(--text-muted);" id="fcbMatch">
                 Diumenge 06/09, 16:15h
             </div>
-            <div class="widget-sub" id="fcbRival">vs. Valencia CF</div>
         </div>
 
         <div class="card">
             <span class="card-title">EUR / CHF</span>
-            <div class="widget-metric" style="font-size: 1.1rem;" id="chfDirect">1 € = -- CHF</div>
-            <div class="widget-sub" id="chfInverse">1 CHF = -- €</div>
+            <div class="currency-text" id="chfDirect">1 € = -- CHF</div>
+            <div class="currency-text-inv" id="chfInverse">1 CHF = -- €</div>
         </div>
 
         <div class="card">
             <span class="card-title">EUR / USD</span>
-            <div class="widget-metric" style="font-size: 1.1rem;" id="usdDirect">1 € = -- $</div>
-            <div class="widget-sub" id="usdInverse">1 $ = -- €</div>
+            <div class="currency-text" id="usdDirect">1 € = -- $</div>
+            <div class="currency-text-inv" id="usdInverse">1 $ = -- €</div>
         </div>
     </div>
 
@@ -374,12 +413,12 @@
                 const dayStr = `${dies[nextMatch.mDate.getDay()]} ${String(nextMatch.mDate.getDate()).padStart(2, '0')}/${String(nextMatch.mDate.getMonth() + 1).padStart(2, '0')}`;
                 const timeStr = `${String(nextMatch.mDate.getHours()).padStart(2, '0')}:${String(nextMatch.mDate.getMinutes()).padStart(2, '0')}h`;
 
-                document.getElementById('fcbMatch').innerText = `${dayStr}, ${timeStr}`;
                 document.getElementById('fcbRival').innerText = `${prefix} ${rival}`;
+                document.getElementById('fcbMatch').innerText = `${dayStr}, ${timeStr}`;
             }
         } catch (e) {
-            document.getElementById('fcbMatch').innerText = "Diumenge 06/09, 16:15h";
             document.getElementById('fcbRival').innerText = "vs. Valencia CF";
+            document.getElementById('fcbMatch').innerText = "Diumenge 06/09, 16:15h";
         }
     }
     updateFCBMatch();
