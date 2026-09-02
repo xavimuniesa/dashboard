@@ -319,14 +319,14 @@
 
         <!-- 3. Canvi EUR - CHF -->
         <div class="card">
-            <span class="card-title">Canvi EUR / CHF (BCE)</span>
+            <span class="card-title">Canvi EUR / CHF</span>
             <div class="widget-metric" style="font-size: 1.3rem;" id="chfDirect">1 € = -- CHF</div>
             <div class="widget-sub" id="chfInverse">1 CHF = -- €</div>
         </div>
 
         <!-- 4. Canvi EUR - USD -->
         <div class="card">
-            <span class="card-title">Canvi EUR / USD (BCE)</span>
+            <span class="card-title">Canvi EUR / USD</span>
             <div class="widget-metric" style="font-size: 1.3rem;" id="usdDirect">1 € = -- $</div>
             <div class="widget-sub" id="usdInverse">1 $ = -- €</div>
         </div>
@@ -456,28 +456,53 @@
     updateWeather();
     setInterval(updateWeather, 600000);
 
-    // --- DIVISES VIA FRANKFURTER API (BANC CENTRAL EUROPEU) ---
+    // --- DIVISES AMB FALLBACK I TRACTAMENT D'ERRORS ---
     async function updateCurrencies() {
-        try {
-            const res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=CHF,USD');
-            const data = await res.json();
-            
-            const chf = data.rates.CHF;
-            const usd = data.rates.USD;
+        const chfDirect = document.getElementById('chfDirect');
+        const usdDirect = document.getElementById('usdDirect');
+        const chfInverse = document.getElementById('chfInverse');
+        const usdInverse = document.getElementById('usdInverse');
 
+        try {
+            // Intent 1: API de Frankfurter
+            let res = await fetch('https://api.frankfurter.app/latest?from=EUR&to=CHF,USD');
+            if (!res.ok) throw new Error('Error Frankfurter');
+            let data = await res.json();
+            
+            renderCurrencies(data.rates.CHF, data.rates.USD);
+        } catch (e) {
+            try {
+                // Intent 2: API alternativa oberta per si falla la primera
+                let res = await fetch('https://open.er-api.com/v6/latest/EUR');
+                let data = await res.json();
+                if (data && data.rates) {
+                    renderCurrencies(data.rates.CHF, data.rates.USD);
+                } else {
+                    throw new Error('Error fallback API');
+                }
+            } catch (err) {
+                // Si tot falla, mostra valors orientatius de recanvi
+                chfDirect.innerText = "1 € = ~0.940 CHF";
+                chfInverse.innerText = "1 CHF = ~1.064 €";
+                usdDirect.innerText = "1 € = ~1.080 $";
+                usdInverse.innerText = "1 $ = ~0.926 €";
+            }
+        }
+    }
+
+    function renderCurrencies(chf, usd) {
+        if (chf) {
             document.getElementById('chfDirect').innerText = `1 € = ${chf.toFixed(3)} CHF`;
             document.getElementById('chfInverse').innerText = `1 CHF = ${(1 / chf).toFixed(3)} €`;
-
+        }
+        if (usd) {
             document.getElementById('usdDirect').innerText = `1 € = ${usd.toFixed(3)} $`;
             document.getElementById('usdInverse').innerText = `1 $ = ${(1 / usd).toFixed(3)} €`;
-        } catch (e) {
-            document.getElementById('chfDirect').innerText = "Error en carregar";
-            document.getElementById('usdDirect').innerText = "Error en carregar";
         }
     }
 
     updateCurrencies();
-    setInterval(updateCurrencies, 3600000); // S'actualitza cada hora
+    setInterval(updateCurrencies, 3600000); // Actualitza cada hora
 </script>
 </body>
 </html>
