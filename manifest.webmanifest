@@ -2,6 +2,7 @@
   "name": "Taulell de Control",
   "short_name": "Taulell",
   "description": "Rellotges, calendari, el temps, FC Barcelona, divises, ràdio, TV, notícies i podcasts.",
+  "id": "./",
   "lang": "ca",
   "start_url": "./",
   "scope": "./",
