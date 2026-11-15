@@ -115,7 +115,8 @@ a{ color:inherit; }
 .clock-foot{ display:flex; align-items:center; justify-content:center; gap:10px; padding-top:4px; font-weight:700; font-size:clamp(15px,4.6vw,18px); }
 .clock-foot .sep{ color:var(--line); font-weight:400; }
 .clock-foot{ cursor:pointer; }
-.clock-bar{ display:grid; grid-template-columns:1fr auto 1fr; align-items:center; gap:8px; padding:4px 6px 0; }
+.clock-bar{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:4px 6px 0; min-height:36px; }
+.clock-bar > span:empty{ display:none; }
 .icon-btn{ min-width:44px; height:32px; border-radius:16px; border:1px solid var(--line); background:var(--card2); color:var(--ink);
   font-weight:700; font-size:12px; display:inline-flex; align-items:center; justify-content:center; gap:4px; padding:0 10px; cursor:pointer; }
 .icon-btn[aria-pressed="true"]{ background:var(--accent); color:#000; border-color:var(--accent); }
@@ -181,7 +182,7 @@ html[data-skin="perpetu"] .cal-grid .d.fe, html[data-skin="vostok"] .cal-grid .d
 .c-row{ display:flex; align-items:center; gap:10px; min-width:0; }
 .c-row .grow{ min-width:0; }
 .wx-emo{ font-size:clamp(22px,6.5vw,28px); line-height:1; }
-html.zz .emo, html.zz .wx-emo{ filter:grayscale(1) sepia(1) hue-rotate(60deg) saturate(2.5) brightness(calc(.65 * var(--zzk, 1))); }
+html.zz .emo, html.zz .wx-emo{ filter:grayscale(1) sepia(1) hue-rotate(var(--zzh, 60deg)) saturate(var(--zzs, 2.5)) brightness(calc(.65 * var(--zzk, 1))); }
 .gender{ position:absolute; top:9px; right:11px; font-size:15px; font-weight:700; line-height:1; }
 .gender.m{ color:var(--accent2); } .gender.f{ color:#f472b6; }
 html.zz .gender.f{ color:var(--accent); }
@@ -301,6 +302,28 @@ html.zz .k-lcd{ --lcd-bg-1:#000; --lcd-bg-2:#000; --lcd-ink:var(--lume); --lcd-g
 html.zz .k-lcd::before{ display:none; }
 html.zz .k-top .dot{ background:var(--lume); }
 
+/* ================= MODE Zz: botons de to i de tauleta de nit ================= */
+#zzTo{ min-width:36px; padding:0; }
+#zzTo i{ width:16px; height:16px; border-radius:50%; display:block; box-shadow:0 0 0 1px var(--line); }
+#npBtn{ min-width:40px; padding:0; font-size:12px; }
+/* ================= TAULETA DE NIT ================= */
+.nit-panel{ display:none; }
+html.zz.np .nit-panel{ display:flex; position:absolute; inset:0; z-index:8; flex-direction:column; align-items:center; justify-content:center; gap:10px; cursor:pointer; }
+html.zz.np .lower > .slot{ visibility:hidden; }
+.np-row{ display:flex; align-items:center; justify-content:center; gap:.18em; font-size:clamp(72px, 26vw, 132px); line-height:1; }
+.np-row .emo{ font-size:.82em; }
+.np-temp{ font-weight:700; letter-spacing:-.02em; }
+.np-date{ font-size:clamp(19px, 6vw, 30px); font-weight:600; color:var(--ink); text-align:center; padding:0 12px; }
+/* ================= EN HORITZONTAL: el rellotge a l'esquerra i les finestres a la dreta ================= */
+@media (orientation: landscape) and (max-height: 600px){
+  .app{ max-width:none; flex-direction:row; align-items:flex-start; }
+  .w-clock{ height:calc(100dvh - 20px - env(safe-area-inset-bottom)); width:min(48vw, calc(100dvh + 10px)); }
+  .lower{ flex:1 1 0; min-width:0; }
+  html.zz.np .lower{ height:calc(100dvh - 20px - env(safe-area-inset-bottom)); grid-template-rows:none; }
+  .np-row{ font-size:clamp(72px, 30dvh, 150px); }
+  .np-date{ font-size:clamp(19px, 7dvh, 32px); }
+}
+
 </style>
 </head>
 <body>
@@ -385,6 +408,8 @@ html.zz .k-top .dot{ background:var(--lume); }
         <div class="dots" id="dialDots" aria-hidden="true"></div>
         <div class="tools">
           <button type="button" class="icon-btn" id="insBtn" hidden aria-label="Instal·la l'app">INS</button>
+          <button type="button" class="icon-btn zzk" id="npBtn" aria-pressed="false" aria-label="Temperatura i data en gran">°C</button>
+          <button type="button" class="icon-btn zzk" id="zzTo" aria-label="Canvia el color del mode Zz"><i></i></button>
           <button type="button" class="icon-btn zzk" id="zzDn" aria-label="Zz menys intens">−</button>
           <button type="button" class="icon-btn zzk" id="zzUp" aria-label="Zz més intens">+</button>
           <button type="button" class="icon-btn" id="zzBtn" aria-pressed="false" aria-label="Mode nocturn Zz">Zz</button>
@@ -404,6 +429,12 @@ html.zz .k-top .dot{ background:var(--lume); }
   </section>
 
   <div class="lower" id="lower">
+
+    <!-- ================= TAULETA DE NIT (només en mode Zz, amb el botó °C) ================= -->
+    <section class="card nit-panel" id="wNit" aria-label="Temperatura i data">
+      <div class="np-row"><span class="emo" id="npEmo">·</span><span class="np-temp" id="npTemp">--°</span></div>
+      <div class="np-date" id="npDate">—</div>
+    </section>
 
     <!-- ================= RÀDIO · TV · NOTÍCIES · PODCASTS ================= -->
     <div class="slot full">
@@ -2565,6 +2596,8 @@ function updateDates(now, force){
       KOS.mirrorText('dateNum', 'dateNumG');
     }
   } catch(e){}
+  // tauleta de nit
+  { const mes = MESOS[now.getMonth()]; $('#npDate').textContent = `${DIES[now.getDay()].charAt(0).toUpperCase() + DIES[now.getDay()].slice(1)}, ${now.getDate()} ${/^[aeiou]/.test(mes) ? "d'" : 'de '}${mes}`; }
   // Kasio
   $('#kDay').textContent = DIES_C[now.getDay()].toUpperCase();
   $('#kDate').textContent = `${pad2(now.getDate())} ${MESOS_K[now.getMonth()]} ${now.getFullYear()}`;
@@ -2795,6 +2828,7 @@ function pintaTemps(m){
   const T = v => v == null ? '--' : Math.round(v);
   $('#wxEmo').textContent = $('#wxEmo2').textContent = wxEmo(c.weather_code, dia);
   $('#wxTemp').textContent = $('#wxTemp2').textContent = `${T(c.temperature_2m)} °C`;
+  $('#npEmo').textContent = wxEmo(c.weather_code, dia); $('#npTemp').textContent = `${T(c.temperature_2m)}°`;
   $('#wxHum').textContent = `Humitat ${T(c.relative_humidity_2m)} %`;
   $('#wxDesc').textContent = wxTxt(c.weather_code);
   $('#wxMaxMin').innerHTML = dd.temperature_2m_max ? `màx <b>${T(dd.temperature_2m_max[0])}°</b><br>mín <b>${T(dd.temperature_2m_min[0])}°</b>` : '';
@@ -3227,25 +3261,41 @@ wheels.media = makeWheel($('#wMedia'), {
    ===================================================================== */
 // Intensitat del mode Zz: tots els tons lluminosos (esferes, textos, vores i filtres) s'escalen alhora.
 const ZZ_NIVELLS = [0.22, 0.34, 0.48, 0.64, 0.82, 1];
-const ZZ_BASE = { '--lume':[125,255,143], '--nit':[79,191,99], '--ink':[143,210,124], '--muted':[79,138,69], '--faint':[58,102,52],
-  '--accent':[125,255,143], '--accent2':[125,255,143], '--ds':[125,255,143], '--dg':[125,255,143], '--line':[20,35,26],
-  '--zh-lume':[125,255,143], '--zh-body':[62,128,72], '--zh-dim':[38,80,44] };
+// Dos tons: el verd lluminós i el verd cremós del lume de les agulles del PRS 516 (#d7e8bc).
+// La resta de tons (textos, vores, cossos de les agulles) surten del to triat, més apagats.
+const ZZ_TONS = { verd: { c:[125,255,143], h:60, s:2.5 }, crema: { c:[215,232,188], h:38, s:0.7 } };
+const ZZ_PARTS = { '--lume':1, '--nit':.75, '--ink':.85, '--muted':.55, '--faint':.42, '--accent':1, '--accent2':1, '--ds':1, '--dg':1,
+  '--line':.16, '--zh-lume':1, '--zh-body':.5, '--zh-dim':.32 };
 let zzNivell = Math.min(ZZ_NIVELLS.length - 1, Math.max(0, store.get('tdc.zzk', 4)));
+let zzTo = ZZ_TONS[store.get('tdc.zzto', 'verd')] ? store.get('tdc.zzto', 'verd') : 'verd';
 function aplicaIntensitat(){
-  const st = document.documentElement.style, k = ZZ_NIVELLS[zzNivell];
-  Object.entries(ZZ_BASE).forEach(([v, c]) => {
+  const st = document.documentElement.style, k = ZZ_NIVELLS[zzNivell], to = ZZ_TONS[zzTo];
+  Object.entries(ZZ_PARTS).forEach(([v, part]) => {
     if (!esZz){ st.removeProperty(v); return; }
     // les vores i els tons apagats no baixen tant, perquè a intensitat mínima encara es distingeixin
     const kk = (v === '--line' || v === '--faint' || v === '--muted') ? Math.max(k, 0.5) : k;
-    st.setProperty(v, `rgb(${c.map(x => Math.round(x * kk)).join(',')})`);
+    st.setProperty(v, `rgb(${to.c.map(x => Math.round(x * part * kk)).join(',')})`);
   });
-  if (esZz) st.setProperty('--zzk', k); else st.removeProperty('--zzk');
-  const L = [0.2126, 0.7152, 0.0722], col = [125/255, 1, 143/255];
+  ['--zzk', '--zzh', '--zzs'].forEach((v, i) => { if (esZz) st.setProperty(v, [k, to.h + 'deg', to.s][i]); else st.removeProperty(v); });
+  const L = [0.2126, 0.7152, 0.0722], col = to.c.map(x => x / 255);
   const mat = f => col.map(c => L.map(l => (c * l * f).toFixed(4)).join(' ') + ' 0 0').join('  ') + '  0 0 0 1 0';
   $('#zz-b feColorMatrix').setAttribute('values', mat(k));
   $('#zz-a-dim feColorMatrix').setAttribute('values', mat(0.5 * Math.max(k, 0.45)));
   $('#zzDn').disabled = zzNivell === 0; $('#zzUp').disabled = zzNivell === ZZ_NIVELLS.length - 1;
+  // el botó de color ensenya l'altre to (el que posarà en tocar-lo)
+  const altre = ZZ_TONS[zzTo === 'verd' ? 'crema' : 'verd'].c;
+  $('#zzTo i').style.background = `rgb(${altre.map(x => Math.round(x * Math.max(k, .5))).join(',')})`;
 }
+$('#zzTo').addEventListener('click', () => { zzTo = zzTo === 'verd' ? 'crema' : 'verd'; store.set('tdc.zzto', zzTo); aplicaIntensitat(); });
+// Tauleta de nit: en mode Zz, la part de sota passa a ser una sola finestra amb el cel, la temperatura i la data en gran
+function setNit(on){
+  document.documentElement.classList.toggle('np', on);
+  $('#npBtn').setAttribute('aria-pressed', on ? 'true' : 'false');
+  store.set('tdc.np', on);
+  if (on) $$('.card.expanded').forEach(c => c.__wheel && c.__wheel.reset());
+}
+$('#npBtn').addEventListener('click', () => setNit(!document.documentElement.classList.contains('np')));
+$('#wNit').addEventListener('click', () => setNit(false));
 function canviaIntensitat(d){
   zzNivell = Math.min(ZZ_NIVELLS.length - 1, Math.max(0, zzNivell + d));
   store.set('tdc.zzk', zzNivell); aplicaIntensitat();
@@ -3284,6 +3334,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
    ENGEGADA
    ===================================================================== */
 setZz(store.get('tdc.zz', false));
+setNit(store.get('tdc.np', false));
 applySkin();
 updateDates(new Date(), true);
 { const def = DIAL_DEFS[SKINS[dialIdx]]; try { def.show && def.show(); } catch(e){} }
