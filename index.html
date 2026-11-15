@@ -321,7 +321,8 @@ html.zz .k-top .dot{ background:var(--lume); }
                 <radialGradient id="mPin" cx="35%" cy="30%" r="70%"><stop offset="0%" stop-color="#ff5b4d"/><stop offset="100%" stop-color="#b30000"/></radialGradient>
                 <filter id="mInset" x="-10%" y="-10%" width="120%" height="120%"><feOffset dx="0" dy="2.4"/><feGaussianBlur stdDeviation="3.4" result="ob"/><feComposite operator="out" in="SourceGraphic" in2="ob" result="inv"/><feFlood flood-color="#000" flood-opacity=".28" result="c"/><feComposite operator="in" in="c" in2="inv" result="sh"/><feComposite operator="over" in="sh" in2="SourceGraphic"/></filter>
                 <filter id="mDateInset" x="-60%" y="-60%" width="220%" height="220%"><feOffset dx="0" dy="1.3"/><feGaussianBlur stdDeviation="1" result="ob"/><feComposite operator="out" in="SourceGraphic" in2="ob" result="inv"/><feFlood flood-color="#000" flood-opacity=".6" result="c"/><feComposite operator="in" in="c" in2="inv" result="sh"/><feComposite operator="over" in="sh" in2="SourceGraphic"/></filter>
-                <filter id="mHandSh" x="-50%" y="-20%" width="200%" height="140%"><feDropShadow dx="2" dy="3" stdDeviation="2.2" flood-color="#000" flood-opacity=".28"/></filter>
+                <!-- zona fixa (tota l'esfera): si depengués de la mida de l'agulla, una agulla horitzontal o vertical quedaria sense zona i desapareixeria -->
+                <filter id="mHandSh" filterUnits="userSpaceOnUse" x="-20" y="-20" width="340" height="340"><feDropShadow dx="2" dy="3" stdDeviation="2.2" flood-color="#000" flood-opacity=".28"/></filter>
                 <filter id="mCase" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="7" stdDeviation="7" flood-color="#000" flood-opacity=".45"/></filter>
               </defs>
               <g filter="url(#mCase)"><circle cx="150" cy="150" r="140" fill="url(#mDial)" stroke="url(#mBezel)" stroke-width="12" filter="url(#mInset)"/></g>
