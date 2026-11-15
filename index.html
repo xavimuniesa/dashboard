@@ -3013,18 +3013,12 @@ wheels.geo = makeWheel($('#wGeo'));
 const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/soccer/';
 const TEAMS = {
   m: { id:'83', sdb:'133739', leagues:[['esp.1','La Liga'],['esp.copa_del_rey','Copa del Rei'],['uefa.champions','Champions'],['esp.super_cup','Supercopa']] },
-  f: { id:null, sdb:'144766', leagues:[['esp.w.1','Liga F'],['esp.w.copa_de_la_reina','Copa de la Reina'],['uefa.wchampions','Champions'],['esp.w.super_cup','Supercopa']] }
+  // femení: identificador d'ESPN fix (abans s'endevinava a partir de la llista de la lliga i fallava)
+  f: { id:'20091', sdb:'144766', leagues:[['esp.w.1','Liga F'],['esp.copa_de_la_reina','Copa de la Reina'],['uefa.wchampions','Champions'],['esp.w.super_cup','Supercopa']] }
 };
 const fcb = { m:{}, f:{} };
 const lliguesKO = {};
-async function idFemeni(){
-  const k = store.get('tdc.espnF', null); if (k) return k;
-  const j = await getJSON(ESPN + 'esp.w.1/teams');
-  const teams = (((j.sports || [])[0] || {}).leagues || [])[0]?.teams || [];
-  const t = teams.map(x => x.team).find(x => /barcelona/i.test(x.displayName || x.name || ''));
-  if (!t) throw new Error('sense equip');
-  store.set('tdc.espnF', t.id); return t.id;
-}
+try { localStorage.removeItem('tdc.espnF'); } catch(e){}
 const scoreOf = x => x.score == null ? null : (typeof x.score === 'object' ? (x.score.displayValue ?? x.score.value) : x.score);
 function parseEv(e, lg, label, teamId){
   const c = (e.competitions || [])[0]; if (!c) return null;
@@ -3040,7 +3034,7 @@ function parseEv(e, lg, label, teamId){
 }
 async function carregaFCB(g){
   const T = TEAMS[g];
-  const id = g === 'm' ? T.id : await idFemeni();
+  const id = T.id;
   const reqs = [];
   T.leagues.forEach(([lg, label]) => {
     if (lliguesKO[lg + id] > Date.now()) return;        // competició que ESPN no té: no s'hi torna fins demà
