@@ -306,6 +306,11 @@ html.zz .k-top .dot{ background:var(--lume); }
 #zzTo{ min-width:36px; padding:0; }
 #zzTo i{ width:16px; height:16px; border-radius:50%; display:block; box-shadow:0 0 0 1px var(--line); }
 #npBtn{ min-width:40px; padding:0; font-size:12px; }
+#soBtn{ min-width:38px; padding:0; }
+#soBtn svg{ width:19px; height:19px; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+#soBtn .barra{ display:none; }
+#soBtn.mut .barra{ display:inline; } #soBtn.mut .ona{ display:none; }
+#soBtn[aria-pressed="true"]{ background:var(--card2); color:var(--ink); border-color:var(--line); }
 /* ================= TAULETA DE NIT ================= */
 .nit-panel{ display:none; }
 html.zz.np .nit-panel{ display:flex; position:absolute; inset:0; z-index:8; flex-direction:column; align-items:center; justify-content:center; gap:10px; cursor:pointer; }
@@ -408,6 +413,7 @@ html.zz.np .lower > .slot{ visibility:hidden; }
         <div class="dots" id="dialDots" aria-hidden="true"></div>
         <div class="tools">
           <button type="button" class="icon-btn" id="insBtn" hidden aria-label="Instal·la l'app">INS</button>
+          <button type="button" class="icon-btn" id="soBtn" hidden aria-pressed="true" aria-label="Tic-tac del rellotge"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z"/><path class="ona" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="barra" d="M15 9l6 6M21 9l-6 6"/></svg></button>
           <button type="button" class="icon-btn zzk" id="npBtn" aria-pressed="false" aria-label="Temperatura i data en gran">°C</button>
           <button type="button" class="icon-btn zzk" id="zzTo" aria-label="Canvia el color del mode Zz"><i></i></button>
           <button type="button" class="icon-btn zzk" id="zzDn" aria-label="Zz menys intens">−</button>
@@ -2629,6 +2635,93 @@ function applySkin(){
     $('meta[name="theme-color"]').setAttribute('content', bg || '#120910');
   });
 }
+/* =====================================================================
+   TIC-TAC (motor de so de República, sense canvis): només amb la Capitaine (XM) i l'Antaviana
+   ===================================================================== */
+let ctxAudio = null, ultimUsAudio = 0, soActiu = store.get('tdc.so', true), ticT = null, ticSeg = 0;
+function despertaAudio(){
+  if (!ctxAudio){ const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null; ctxAudio = new AC(); }
+  if (ctxAudio.state === 'suspended') ctxAudio.resume().catch(() => {});
+  ultimUsAudio = performance.now();
+  return ctxAudio;
+}
+// el navegador només deixa sonar després d'un toc: el primer toc desperta l'àudio
+// (es desperta en qualsevol toc, i si l'esfera no fa tic-tac es torna a adormir de seguida)
+['pointerdown','touchend','click','keydown'].forEach(ev => document.addEventListener(ev, () => { if (!soActiu) return; despertaAudio(); if (!ambTic()) rellotgeTicTac(); }, { passive:true }));
+  let ticBufs = null, ticSortida = null, ticDarrer = 0;
+  function rndLlavor(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+  function fesTic(ctx, tac, llavor){
+    const sr = ctx.sampleRate, len = Math.floor(sr*.32), buf = ctx.createBuffer(1, len, sr), d = buf.getChannelData(0), rnd = rndLlavor(llavor);
+    const jit = () => 1 + (rnd()-.5)*.03;
+    const metall = tac ? [[1180,.34,.022],[1790,.24,.014],[2640,.14,.009],[3900,.06,.006],[760,.2,.03]]
+                       : [[1380,.32,.02],[2060,.22,.013],[3010,.13,.008],[4300,.05,.005],[880,.17,.026]];
+    const fusta = [[112,.46,.050],[198,.54,.040],[296,.42,.030],[430,.28,.022],[615,.15,.015],[870,.07,.010]];
+    const guanyFusta = tac ? 1.3 : 1.05;
+    function cop(t0, amp, kM, kF){
+      const i0 = Math.floor(t0*sr);
+      for (const [f0,a,tau] of metall){ const f = f0*jit(), ph = rnd()*6.283, w = 6.2832*f/sr, k = Math.exp(-1/(tau*.4*sr*jit())); let e = a*amp*kM*.6;
+        for (let i = i0; i < len && e > 1e-5; i++){ d[i] += e*Math.sin(w*(i-i0)+ph); e *= k; } }
+      for (const [f0,a,tau] of fusta){ const f = f0*jit(), w = 6.2832*f/sr, k = Math.exp(-1/(tau*sr)); let e = a*amp*kF*guanyFusta;
+        for (let i = i0; i < len && e > 1e-5; i++){ const n = i-i0, att = n < sr*.0015 ? n/(sr*.0015) : 1; d[i] += e*att*Math.sin(w*n); e *= k; } }
+      let e = .14*amp, ant = 0; const k = Math.exp(-1/(.0012*sr));
+      for (let i = i0; i < len && e > 1e-5; i++){ const x = rnd()*2-1; d[i] += e*(x-ant); ant = x; e *= k; }
+    }
+    cop(0, 1, 1, 1);
+    cop(tac ? .011 : .009, .22, .6, .25);
+    let pk = 0; for (let i = 0; i < len; i++) pk = Math.max(pk, Math.abs(d[i]));
+    const g = (tac ? .92 : .78) / pk; for (let i = 0; i < len; i++) d[i] *= g;
+    return buf;
+  }
+  function ticTac(ctx, quan, tac){
+    if (!ticBufs) ticBufs = { tic:[1,2,3].map(n => fesTic(ctx, false, 100+n)), tac:[1,2,3].map(n => fesTic(ctx, true, 200+n)) };
+    if (!ticSortida){
+      ticSortida = ctx.createGain(); ticSortida.gain.value = .4;
+      const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 2200; lp.Q.value = .5;
+      const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -12; comp.ratio.value = 3;
+      ticSortida.connect(lp); lp.connect(comp); comp.connect(ctx.destination);
+    }
+    const arr = tac ? ticBufs.tac : ticBufs.tic, src = ctx.createBufferSource();
+    src.buffer = arr[Math.floor(Math.random()*arr.length)]; src.playbackRate.value = 1 + (Math.random()-.5)*.006;
+    const g = ctx.createGain(); g.gain.value = .94 + Math.random()*.08; src.connect(g); g.connect(ticSortida); src.start(quan);
+  }
+const TIC_SKINS = ['capitaine', 'antaviana'];
+const ambTic = () => TIC_SKINS.includes(SKINS[dialIdx]);
+// cada segon, just quan salta la segonera (com a República). Amb les altres esferes no s'executa res.
+function rellotgeTicTac(){
+  clearTimeout(ticT); ticT = null;
+  if (!soActiu || !ambTic() || document.hidden){
+    // l'àudio s'adorm si no ha de sonar (estalvia bateria)
+    if (ctxAudio && ctxAudio.state === 'running') ctxAudio.suspend().catch(() => {});
+    return;
+  }
+  const ara = Date.now(), seg = Math.ceil((ara + 1) / 1000) * 1000;
+  ticT = setTimeout(() => {
+    try {
+      if (ctxAudio && ctxAudio.state === 'suspended' && performance.now() - ultimUsAudio < 90000) ctxAudio.resume().catch(() => {});
+      if (ctxAudio && ctxAudio.state === 'running' && seg !== ticSeg){
+        ticSeg = seg;
+        const falta = Math.max(0, seg - Date.now());
+        const quan = Math.max(ctxAudio.currentTime, ctxAudio.currentTime + falta/1000 - (ctxAudio.outputLatency || 0));
+        ticTac(ctxAudio, quan, (seg/1000) % 2 === 1);
+        ultimUsAudio = performance.now();
+      }
+    } catch(e){}
+    rellotgeTicTac();
+  }, Math.max(0, seg - ara - 60) + (seg === ticSeg ? 120 : 0));
+}
+function pintaSo(){
+  const b = $('#soBtn');
+  b.hidden = !ambTic();
+  b.setAttribute('aria-pressed', soActiu ? 'true' : 'false');
+  b.classList.toggle('mut', !soActiu);
+}
+$('#soBtn').addEventListener('click', () => {
+  soActiu = !soActiu; store.set('tdc.so', soActiu); pintaSo();
+  if (soActiu) despertaAudio();
+  rellotgeTicTac();
+});
+document.addEventListener('visibilitychange', () => { if (!document.hidden && soActiu && ambTic() && ctxAudio) despertaAudio(); rellotgeTicTac(); });
+
 function showDial(i, dir){
   const n = dialEls.length; i = (i + n) % n;
   if (i === dialIdx) return;
@@ -2638,6 +2731,7 @@ function showDial(i, dir){
   dialIdx = i; applySkin();
   const def = DIAL_DEFS[SKINS[i]]; try { def.show && def.show(); } catch(e){}
   loop();
+  pintaSo(); rellotgeTicTac();
 }
 $('#dialDots').innerHTML = dialEls.map(() => '<i></i>').join('');
 dialEls.forEach((d, i) => d.classList.toggle('on', i === dialIdx));
@@ -3335,6 +3429,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
    ===================================================================== */
 setZz(store.get('tdc.zz', false));
 setNit(store.get('tdc.np', false));
+pintaSo(); rellotgeTicTac();
 applySkin();
 updateDates(new Date(), true);
 { const def = DIAL_DEFS[SKINS[dialIdx]]; try { def.show && def.show(); } catch(e){} }
