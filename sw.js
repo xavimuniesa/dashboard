@@ -2,7 +2,7 @@
 // L'app (index.html) es demana primer a la xarxa, perquè les actualitzacions arribin de seguida;
 // si la xarxa no respon en 4 segons (o no n'hi ha), es fa servir la còpia desada.
 // Les lletres es desen la primera vegada. Les dades (el temps, partits, divises, notícies…) sempre van a la xarxa.
-const VERSIO = 'taulell-v10';
+const VERSIO = 'taulell-v12';
 const APP = ['./', 'index.html', 'manifest.webmanifest', 'icones/icon-192.png', 'icones/icon-512.png', 'icones/apple-touch-icon.png', 'icones/favicon-32.png'];
 
 self.addEventListener('install', e => {

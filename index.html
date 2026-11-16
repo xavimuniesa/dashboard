@@ -326,18 +326,22 @@ html.zz.np .lower > .slot{ visibility:hidden; }
 /* ================= EN HORITZONTAL: el rellotge a l'esquerra i les finestres a la dreta ================= */
 @media (orientation: landscape) and (max-height: 600px){
   .app{ max-width:none; flex-direction:row; align-items:flex-start; }
-  .w-clock{ height:calc(100dvh - 20px - env(safe-area-inset-bottom)); width:min(56vw, calc(100dvh + 70px)); }
-  /* l'esfera a l'esquerra amb la localitat a sota; els botons i els punts, en columna a la dreta */
-  .w-clock .pane[data-pane="dials"]{ display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:minmax(0,1fr) auto; column-gap:6px; }
+  /* la finestra del rellotge fa just l'amplada de l'esfera més la columna de botons; la resta és per a la finestra de la dreta */
+  .w-clock{ --hc: calc(100dvh - 20px - env(safe-area-inset-bottom)); height:var(--hc); width:min(62vw, calc(var(--hc) + 16px)); flex:none; }
+  /* l'esfera a l'esquerra amb la localitat a sota; a la dreta, els botons en una sola columna; els punts, a baix a la dreta */
+  .w-clock .pane[data-pane="dials"]{ display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-rows:minmax(0,1fr) auto; column-gap:6px; row-gap:0; }
   .w-clock .pane[data-pane="dials"] .dialwrap{ grid-column:1; grid-row:1; }
   .w-clock .pane[data-pane="dials"] .clock-foot{ grid-column:1; grid-row:2; padding-top:2px; font-size:16px; }
-  .w-clock .pane[data-pane="dials"] .clock-bar{ grid-column:2; grid-row:1 / span 2; flex-direction:column; flex-wrap:nowrap; justify-content:center; padding:0 2px; gap:10px; min-height:0; }
-  .w-clock .pane[data-pane="dials"] .clock-bar .dots{ flex-direction:column; order:2; }
-  .w-clock .pane[data-pane="dials"] .tools{ flex-direction:column; flex-wrap:nowrap; margin:0; }
+  .w-clock .pane[data-pane="dials"] .clock-bar{ display:contents; }
+  .w-clock .pane[data-pane="dials"] .tools{ grid-column:2; grid-row:1; align-self:center; display:flex; flex-direction:column; flex-wrap:nowrap; gap:6px; margin:0; }
+  .w-clock .pane[data-pane="dials"] .tools .icon-btn{ min-width:0; width:38px; padding:0; }
+  .w-clock .pane[data-pane="dials"] .dots{ grid-column:1 / span 2; grid-row:2; align-self:center; justify-self:end; padding-right:4px; }
   .lower{ flex:1 1 0; min-width:0; }
   html.zz.np .lower{ height:calc(100dvh - 20px - env(safe-area-inset-bottom)); grid-template-rows:none; }
-  .np-row{ font-size:clamp(72px, 30dvh, 150px); }
-  .np-date{ font-size:clamp(19px, 7dvh, 32px); }
+  /* la temperatura i la data s'ajusten a l'amplada de la seva finestra: mai no queden tallades */
+  html.zz.np .nit-panel{ container-type:inline-size; padding:10px; }
+  .np-row{ font-size:min(30dvh, 25cqw); }
+  .np-date{ font-size:min(7dvh, 6.2cqw); }
 }
 
 /* En vertical, la finestra gran (temperatura i data) acaba just a la vora de la pantalla:
